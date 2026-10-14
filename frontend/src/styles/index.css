@@ -1,0 +1,297 @@
+@import 'tailwindcss';
+
+/* ── Solace design tokens ─────────────────────────────────────────────
+   All visual decisions flow from these variables. Themes override them via
+   [data-theme]; the settings store sets accent / radius / density at runtime. */
+:root {
+  --s-font: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --s-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+
+  --s-radius: 10px; /* window + panel corner radius (settings-driven) */
+  --s-radius-sm: calc(var(--s-radius) * 0.6);
+  --s-density: 1; /* interface density multiplier (settings-driven) */
+  --s-icon-size: 64px; /* desktop icon size (settings-driven) */
+  --s-border-w: 1px;
+  --s-dock-size: 44px;
+
+  --s-accent: #9d9bf5;
+  --s-accent-fg: #0b0c0f;
+  --s-accent-soft: color-mix(in srgb, var(--s-accent) 16%, transparent);
+  --s-accent-line: color-mix(in srgb, var(--s-accent) 55%, transparent);
+
+  --s-danger: #f08a8a;
+  --s-success: #7bc98a;
+  --s-warn: #e5b567;
+
+  --s-dur: 140ms;
+  --s-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+:root,
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --s-bg: #0b0c0f;
+  --s-surface: #17181c;
+  --s-surface-2: #1e2025;
+  --s-surface-3: #272a31;
+  --s-chrome: #121316; /* title bars, dock */
+  --s-border: #2b2e36;
+  --s-border-strong: #3a3e48;
+  --s-text: #e7e9ee;
+  --s-text-dim: #a3a8b5;
+  --s-text-faint: #8a90a0;
+  --s-overlay: rgb(0 0 0 / 0.45);
+  --s-shadow-win: 0 18px 48px -12px rgb(0 0 0 / 0.65), 0 2px 8px rgb(0 0 0 / 0.4);
+  --s-shadow-pop: 0 10px 30px -8px rgb(0 0 0 / 0.6), 0 1px 4px rgb(0 0 0 / 0.4);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --s-bg: #e9ebf0;
+  --s-surface: #fbfbfd;
+  --s-surface-2: #f1f2f6;
+  --s-surface-3: #e5e7ed;
+  --s-chrome: #f4f5f8;
+  --s-border: #d9dce4;
+  --s-border-strong: #bfc4d0;
+  --s-text: #1a1c22;
+  --s-text-dim: #4f5564;
+  --s-text-faint: #646a79;
+  --s-overlay: rgb(20 24 36 / 0.3);
+  --s-danger: #b42b2b;
+  --s-success: #23763a;
+  --s-warn: #8a5300;
+  --s-shadow-win: 0 18px 44px -14px rgb(20 24 40 / 0.3), 0 2px 8px rgb(20 24 40 / 0.12);
+  --s-shadow-pop: 0 10px 28px -8px rgb(20 24 40 / 0.28), 0 1px 4px rgb(20 24 40 / 0.12);
+}
+
+@theme inline {
+  --font-sans: var(--s-font);
+  --font-mono: var(--s-mono);
+  --color-bg: var(--s-bg);
+  --color-surface: var(--s-surface);
+  --color-surface2: var(--s-surface-2);
+  --color-surface3: var(--s-surface-3);
+  --color-chrome: var(--s-chrome);
+  --color-line: var(--s-border);
+  --color-line2: var(--s-border-strong);
+  --color-ink: var(--s-text);
+  --color-dim: var(--s-text-dim);
+  --color-faint: var(--s-text-faint);
+  --color-accent: var(--s-accent);
+  --color-accentfg: var(--s-accent-fg);
+  --color-accentsoft: var(--s-accent-soft);
+  --color-danger: var(--s-danger);
+  --color-success: var(--s-success);
+  --color-warn: var(--s-warn);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+body {
+  background: var(--s-bg);
+  color: var(--s-text);
+  font-family: var(--s-font);
+  font-size: 13.5px;
+  line-height: 1.45;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+::selection {
+  background: var(--s-accent-line);
+}
+
+/* Visible, theme-aware focus ring on every interactive element (in a layer so utilities like outline-none can override). */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--s-accent);
+    outline-offset: 1px;
+  }
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: default;
+}
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+/* Scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--s-border-strong) transparent;
+}
+
+/* Reusable primitives (kept small; app UIs compose these). */
+.s-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: calc(30px * var(--s-density));
+  padding: 0 calc(12px * var(--s-density));
+  border-radius: var(--s-radius-sm);
+  border: 1px solid var(--s-border);
+  background: var(--s-surface-2);
+  color: var(--s-text);
+  white-space: nowrap;
+  transition: background var(--s-dur) var(--s-ease), border-color var(--s-dur) var(--s-ease);
+}
+.s-btn:hover:not(:disabled) {
+  background: var(--s-surface-3);
+  border-color: var(--s-border-strong);
+}
+.s-btn:disabled {
+  opacity: 0.45;
+}
+.s-btn-primary {
+  background: var(--s-accent);
+  border-color: var(--s-accent);
+  color: var(--s-accent-fg);
+  font-weight: 600;
+}
+.s-btn-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--s-accent) 88%, white);
+  border-color: transparent;
+}
+.s-btn-danger {
+  color: var(--s-danger);
+}
+.s-btn-ghost {
+  background: transparent;
+  border-color: transparent;
+}
+.s-icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: calc(28px * var(--s-density));
+  height: calc(28px * var(--s-density));
+  border-radius: var(--s-radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--s-text-dim);
+  transition: background var(--s-dur) var(--s-ease), color var(--s-dur) var(--s-ease);
+}
+.s-icon-btn:hover:not(:disabled) {
+  background: var(--s-surface-3);
+  color: var(--s-text);
+}
+.s-icon-btn:disabled {
+  opacity: 0.4;
+}
+.s-input {
+  height: calc(30px * var(--s-density));
+  padding: 0 10px;
+  border-radius: var(--s-radius-sm);
+  border: 1px solid var(--s-border);
+  background: var(--s-surface-2);
+  color: var(--s-text);
+  min-width: 0;
+}
+.s-input::placeholder {
+  color: var(--s-text-faint);
+}
+.s-input:focus-visible {
+  outline-offset: 0;
+  border-color: var(--s-accent);
+}
+textarea.s-input {
+  height: auto;
+  padding: 8px 10px;
+}
+.s-panel {
+  background: var(--s-surface);
+  border: var(--s-border-w) solid var(--s-border);
+  border-radius: var(--s-radius);
+  box-shadow: var(--s-shadow-pop);
+}
+.s-kbd {
+  font-family: var(--s-mono);
+  font-size: 11px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--s-border-strong);
+  background: var(--s-surface-2);
+  color: var(--s-text-dim);
+}
+.s-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--s-text-faint);
+}
+.s-row-hover:hover {
+  background: var(--s-surface-3);
+}
+.s-selected {
+  background: var(--s-accent-soft);
+}
+
+/* Entry animations — short and purposeful. */
+/* Use the individual `translate`/`scale` properties so the entry animation composes with
+   elements positioned via `transform` (windows, centred panels) instead of overriding it. */
+@keyframes s-pop {
+  from {
+    opacity: 0;
+    translate: 0 6px;
+    scale: 0.985;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+@keyframes s-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.s-anim-pop {
+  animation: s-pop var(--s-dur) var(--s-ease);
+}
+.s-anim-fade {
+  animation: s-fade 200ms var(--s-ease);
+}
+
+/* Reduced motion: user setting OR OS preference. */
+:root[data-motion='reduced'] *,
+:root[data-motion='reduced'] *::before,
+:root[data-motion='reduced'] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-motion='auto'] *,
+  :root[data-motion='auto'] *::before,
+  :root[data-motion='auto'] *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+.sr-only-focusable:not(:focus) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}

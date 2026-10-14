@@ -1,0 +1,11 @@
+{
+  "name": "Solace OS",
+  "short_name": "Solace",
+  "description": "Everything in its place.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b0c0f",
+  "theme_color": "#0b0c0f",
+  "icons": [{ "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
