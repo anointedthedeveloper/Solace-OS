@@ -1,0 +1,17 @@
+# Local development: plain-HTTP cookies and API docs enabled. Activate with SPRING_PROFILES_ACTIVE=dev.
+server:
+  servlet:
+    session:
+      cookie:
+        secure: false
+solace:
+  cookie-secure: false
+  bcrypt-strength: 10
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+logging:
+  level:
+    app.solace: DEBUG

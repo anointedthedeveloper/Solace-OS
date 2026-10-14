@@ -1,0 +1,27 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:solace-test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  flyway:
+    enabled: true
+server:
+  servlet:
+    session:
+      cookie:
+        secure: false
+solace:
+  cookie-secure: false
+  bcrypt-strength: 4
+  files:
+    max-file-bytes: 4096
+    quota-bytes: 10000
+  rate-limit:
+    login-per-ip: 50
+    login-failures-per-user: 3
+    register-per-ip: 100
+    window-seconds: 900
+springdoc:
+  api-docs:
+    enabled: false
