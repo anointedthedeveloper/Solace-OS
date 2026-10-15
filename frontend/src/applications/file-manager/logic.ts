@@ -89,6 +89,7 @@ export function rangeIds(items: Item[], fromId: string, toId: string): string[] 
 
 export type Location =
   | { kind: 'solace'; folderId: string }
+  | { kind: 'cloud' }
   | { kind: 'trash' }
   | { kind: 'search'; query: string; from: string }
   | { kind: 'computer' };

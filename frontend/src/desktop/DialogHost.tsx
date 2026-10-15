@@ -37,6 +37,8 @@ function PromptDialog() {
           id="solace-prompt-input"
           data-autofocus
           className="s-input w-full"
+          type={prompt.secret ? 'password' : 'text'}
+          autoComplete={prompt.secret ? 'current-password' : 'off'}
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onFocus={(e) => e.currentTarget.select()}

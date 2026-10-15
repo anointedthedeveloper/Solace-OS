@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ChevronRight, Clipboard, Copy, Download, FilePlus2, FolderOpen, FolderPlus, Grid2x2, HardDrive, Home, Info, List, Monitor, Pencil, Scissors,
+  ArrowDown, ArrowLeft, Cloud, ArrowRight, ArrowUp, ChevronRight, Clipboard, Copy, Download, FilePlus2, FolderOpen, FolderPlus, Grid2x2, HardDrive, Home, Info, List, Monitor, Pencil, Scissors,
   Search, Trash2, Undo2, Upload, X,
 } from 'lucide-react';
 import type { AppComponentProps } from '../types';
@@ -11,6 +11,8 @@ import { notify } from '@/stores/notificationStore';
 import { FsError, ROOT_ID, childrenOf, isReachable, isTextLike, pathOf, usedBytes, useFs, validateName } from '@/services/fsStore';
 import { downloadBlob, folderAccessSupported, listFolder, pickFolder, readTextSafely, type LocalDir, type LocalFile, type LocalListing } from '@/services/localFolder';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { CloudFiles } from './CloudFiles';
+import { useAccount } from '@/stores/accountStore';
 import { Modal } from '@/components/ui/Modal';
 import { VirtualList } from '@/components/ui/VirtualList';
 import { formatBytes, formatDateTime } from '@/utils/format';
@@ -68,6 +70,7 @@ export default function FileManager({ props }: AppComponentProps) {
   const loaded = useFs((s) => s.loaded);
   const fs = useFs.getState();
   const clip = useFileClipboard();
+  const signedIn = useAccount((s) => s.status === 'signed-in');
 
   const [loc, setLoc] = useState<Location>({ kind: 'solace', folderId: ROOT_ID });
   const [hist, setHist] = useState<Location[]>([{ kind: 'solace', folderId: ROOT_ID }]);
@@ -582,6 +585,12 @@ export default function FileManager({ props }: AppComponentProps) {
           <SideItem key={q.id} icon={FolderOpen} label={q.name} active={loc.kind === 'solace' && loc.folderId === q.id && !searching} onClick={() => go({ kind: 'solace', folderId: q.id })} onDrop={(e) => void dropOnFolder(e, q.id)} />
         ))}
         <SideItem icon={Trash2} label="Trash" active={loc.kind === 'trash'} onClick={() => go({ kind: 'trash' })} badge={trashCount} />
+        {signedIn && (
+          <>
+            <div className="s-label px-2.5 pt-4 pb-1">Solace Cloud</div>
+            <SideItem icon={Cloud} label="Cloud files" active={loc.kind === 'cloud'} onClick={() => go({ kind: 'cloud' })} />
+          </>
+        )}
         <div className="s-label px-2.5 pt-4 pb-1">This computer</div>
         {computer.root && <SideItem icon={HardDrive} label={computer.root.name} active={loc.kind === 'computer'} onClick={() => go({ kind: 'computer' })} />}
         {folderAccessSupported() ? (
@@ -597,6 +606,9 @@ export default function FileManager({ props }: AppComponentProps) {
       </nav>
 
       {/* Main */}
+      {loc.kind === 'cloud' ? (
+        signedIn ? <CloudFiles /> : <EmptyState icon={Cloud} title="Sign in to use cloud files" hint="Cloud files live on your Solace server. Sign in from Settings → Account." />
+      ) : (
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex flex-wrap items-center gap-1 border-b border-line p-1.5">
           <button className="s-icon-btn" aria-label="Back" disabled={hi === 0} onClick={() => jump(hi - 1)}><ArrowLeft size={16} /></button>
@@ -722,7 +734,9 @@ export default function FileManager({ props }: AppComponentProps) {
         </div>
       </div>
 
-      {details && (
+      )}
+
+      {details && loc.kind !== 'cloud' && (
         <aside className="hidden w-[220px] shrink-0 flex-col gap-3 overflow-y-auto border-l border-line bg-chrome p-3 text-[12.5px] @[760px]:flex" aria-label="Details">
           {selectedOne ? (
             <>

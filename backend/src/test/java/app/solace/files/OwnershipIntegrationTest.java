@@ -115,6 +115,6 @@ class OwnershipIntegrationTest extends IntegrationTest {
         TestClient alice = signedIn("alice6");
         TestClient bob = signedIn("bobby6");
         bob.patch("/api/users/me", json("displayName", "Renamed")).andExpect(status().isOk());
-        alice.get("/api/auth/me").andExpect(jsonPath("$.displayName").value("alice6"));
+        alice.get("/api/auth/session").andExpect(jsonPath("$.user.displayName").value("alice6"));
     }
 }

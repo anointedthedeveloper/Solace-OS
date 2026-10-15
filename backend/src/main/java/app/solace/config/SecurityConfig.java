@@ -89,7 +89,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(a -> a
                 .requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/auth/me").permitAll() // answers 401 itself when signed out
+                .requestMatchers(HttpMethod.GET, "/api/auth/session").permitAll() // always 200; reports whether anyone is signed in
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll() // only exposed when springdoc is enabled
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().denyAll())

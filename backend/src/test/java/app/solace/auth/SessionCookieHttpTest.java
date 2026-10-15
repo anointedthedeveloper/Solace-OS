@@ -23,7 +23,7 @@ class SessionCookieHttpTest {
     void sessionAndCsrfCookiesHaveSafeAttributes() throws Exception {
         HttpClient client = HttpClient.newBuilder().cookieHandler(new CookieManager()).build();
         String base = "http://localhost:" + port;
-        HttpResponse<String> first = client.send(HttpRequest.newBuilder(URI.create(base + "/api/auth/me")).build(), HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> first = client.send(HttpRequest.newBuilder(URI.create(base + "/api/auth/session")).build(), HttpResponse.BodyHandlers.ofString());
         List<String> cookies = first.headers().allValues("Set-Cookie");
         String xsrf = cookies.stream().filter(c -> c.startsWith("XSRF-TOKEN=")).findFirst().orElseThrow();
         assertThat(xsrf).contains("SameSite=Lax").doesNotContain("HttpOnly"); // script-readable by design
@@ -37,7 +37,8 @@ class SessionCookieHttpTest {
         assertThat(session).contains("HttpOnly").contains("SameSite=Lax").contains("Path=/");
         assertThat(session).as("Secure is off only in the test profile; production default is on").doesNotContain("Secure");
 
-        HttpResponse<String> me = client.send(HttpRequest.newBuilder(URI.create(base + "/api/auth/me")).build(), HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> me = client.send(HttpRequest.newBuilder(URI.create(base + "/api/auth/session")).build(), HttpResponse.BodyHandlers.ofString());
         assertThat(me.statusCode()).isEqualTo(200);
+        assertThat(me.body()).contains("\"authenticated\":true").contains("httpuser");
     }
 }

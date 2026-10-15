@@ -5,6 +5,8 @@ import { useSettings } from '@/stores/settingsStore';
 import { useWindows } from '@/stores/windowStore';
 import { useUi } from '@/stores/uiStore';
 import { useOnline } from '@/hooks/useOnline';
+import { useAccount } from '@/stores/accountStore';
+import { useSyncStatus } from '@/services/sync/engine';
 import { useResolvedTheme } from '@/hooks/useApplySettings';
 import { Segmented } from '@/components/ui/Segmented';
 import { cn } from '@/utils/cn';
@@ -33,6 +35,8 @@ export function QuickSettings() {
   const resolved = useResolvedTheme();
   const close = useUi((st) => st.closePanel);
   const fullscreen = !!document.fullscreenElement;
+  const user = useAccount((st) => (st.status === 'signed-in' ? st.user : null));
+  const sync = useSyncStatus((st) => st.state);
 
   return (
     <div className="s-panel s-anim-pop fixed z-[7000] w-[min(340px,calc(100vw-24px))] overflow-hidden" style={panelAnchor(m, 'end')} role="dialog" aria-label="Quick settings">
@@ -94,6 +98,11 @@ export function QuickSettings() {
             <span>{online ? 'Online' : 'Offline'}</span>
           </div>
         </div>
+        {user && (
+          <p className="m-0 text-[12px] text-dim" role="status">
+            Signed in as <strong className="text-ink">{user.username}</strong> · {sync === 'syncing' ? 'syncing…' : sync === 'offline' ? 'offline, will sync later' : sync === 'error' ? 'sync problem' : 'synced'}
+          </p>
+        )}
         {!online && <p className="m-0 text-[12px] text-dim">You're offline. Solace's built-in apps keep working with locally stored data.</p>}
       </div>
     </div>

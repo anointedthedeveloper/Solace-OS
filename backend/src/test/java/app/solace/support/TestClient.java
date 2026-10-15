@@ -63,7 +63,7 @@ public class TestClient {
 
     /** Primes the CSRF cookie the way the SPA does (any request returns it). */
     public TestClient prime() throws Exception {
-        get("/api/auth/me");
+        get("/api/auth/session");
         return this;
     }
 

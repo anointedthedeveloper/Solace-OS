@@ -13,6 +13,8 @@ import { useDocs } from '@/stores/docsStore';
 import { whenHydrated } from '@/services/zustandIdb';
 import { notify } from '@/stores/notificationStore';
 import { idbAvailable } from '@/services/idb';
+import { useAccount } from '@/stores/accountStore';
+import { wireAccountSync } from '@/services/sync/wire';
 
 function useBoot(): boolean {
   const [ready, setReady] = useState(false);
@@ -22,6 +24,9 @@ function useBoot(): boolean {
       if (!alive) return;
       if (!useSettings.getState().settings.windows.restoreOnStartup) useWindows.getState().closeAll();
       setReady(true);
+      wireAccountSync();
+      // Is there a Solace backend, and is someone signed in? Fails quietly into guest mode.
+      void useAccount.getState().checkSession();
       if (!idbAvailable()) {
         notify({ title: 'Storage is limited', body: "This browser blocked IndexedDB, so notes, tasks and documents won't survive a refresh.", level: 'warning' });
       }

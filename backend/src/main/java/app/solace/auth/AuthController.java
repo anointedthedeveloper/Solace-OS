@@ -2,7 +2,6 @@ package app.solace.auth;
 
 import app.solace.auth.AuthDtos.LoginRequest;
 import app.solace.auth.AuthDtos.RegisterRequest;
-import app.solace.common.ApiException;
 import app.solace.security.AuthenticatedUser;
 import app.solace.user.UserDtos.UserResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -57,11 +56,16 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
-    /** 200 with the signed-in user, or 401. Also primes the XSRF-TOKEN cookie for the single-page app. */
-    @GetMapping("/me")
-    public UserResponse me(org.springframework.security.core.Authentication authentication) {
-        if (authentication == null || !(authentication.getPrincipal() instanceof AuthenticatedUser u)) throw ApiException.unauthorized("Not signed in");
-        return auth.profile(u.id());
+    public record SessionResponse(boolean authenticated, UserResponse user) {}
+
+    /**
+     * Always 200: tells the single-page app whether someone is signed in. (A 401 here would show up as a
+     * console error on every guest visit.) Also primes the XSRF-TOKEN cookie.
+     */
+    @GetMapping("/session")
+    public SessionResponse session(org.springframework.security.core.Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof AuthenticatedUser u)) return new SessionResponse(false, null);
+        return new SessionResponse(true, auth.profile(u.id()));
     }
 
     private void startSession(AuthenticatedUser user, HttpServletRequest http, HttpServletResponse res) {

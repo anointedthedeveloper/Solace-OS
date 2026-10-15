@@ -36,6 +36,8 @@ export interface PromptRequest {
   label: string;
   initial: string;
   confirmLabel: string;
+  /** Mask the input (passwords). */
+  secret: boolean;
   validate?: (v: string) => string | null;
   resolve: (v: string | null) => void;
 }
@@ -120,6 +122,7 @@ export function promptDialog(opts: {
   label: string;
   initial?: string;
   confirmLabel?: string;
+  secret?: boolean;
   validate?: (v: string) => string | null;
 }): Promise<string | null> {
   return new Promise((resolve) => {
@@ -130,6 +133,7 @@ export function promptDialog(opts: {
         label: opts.label,
         initial: opts.initial ?? '',
         confirmLabel: opts.confirmLabel ?? 'OK',
+        secret: !!opts.secret,
         validate: opts.validate,
         resolve: (v) => {
           useUi.setState({ prompt: null });

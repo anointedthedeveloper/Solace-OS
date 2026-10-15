@@ -31,7 +31,7 @@ class AuthIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$.displayName").value("Ada L"))
                 .andExpect(jsonPath("$.password").doesNotExist())
                 .andExpect(jsonPath("$.passwordHash").doesNotExist());
-        b.get("/api/auth/me").andExpect(status().isOk()).andExpect(jsonPath("$.username").value("Ada"));
+        b.get("/api/auth/session").andExpect(status().isOk()).andExpect(jsonPath("$.authenticated").value(true)).andExpect(jsonPath("$.user.username").value("Ada"));
         assertCount("users", 1);
     }
 
@@ -63,8 +63,8 @@ class AuthIntegrationTest extends IntegrationTest {
         signedIn("loginuser");
         TestClient other = browser();
         other.post("/api/auth/login", json("username", "LOGINUSER", "password", "correct horse battery staple")).andExpect(status().isOk()).andExpect(jsonPath("$.username").value("loginuser"));
-        other.get("/api/auth/me").andExpect(status().isOk());
-        browser().get("/api/auth/me").andExpect(status().isUnauthorized());
+        other.get("/api/auth/session").andExpect(jsonPath("$.authenticated").value(true));
+        browser().get("/api/auth/session").andExpect(jsonPath("$.authenticated").value(false));
     }
 
     @Test
@@ -96,10 +96,10 @@ class AuthIntegrationTest extends IntegrationTest {
         MockHttpSession session = b.session();
         assertThat(session).isNotNull();
         b.postEmpty("/api/auth/logout").andExpect(status().isNoContent());
-        b.get("/api/auth/me").andExpect(status().isUnauthorized());
+        b.get("/api/auth/session").andExpect(status().isOk()).andExpect(jsonPath("$.authenticated").value(false)).andExpect(jsonPath("$.user").doesNotExist());
         // Replaying the old session must not work either: it is dead on the server.
         assertThat(session.isInvalid()).isTrue();
-        mvc.perform(get("/api/auth/me").session(session)).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/auth/session").session(session)).andExpect(jsonPath("$.authenticated").value(false));
         mvc.perform(get("/api/notes").session(session)).andExpect(status().isUnauthorized());
     }
 
@@ -113,7 +113,7 @@ class AuthIntegrationTest extends IntegrationTest {
         b.useSession(attackerPlanted);
         b.post("/api/auth/login", json("username", "fixation", "password", "correct horse battery staple")).andExpect(status().isOk());
         assertThat(b.session().getId()).as("session id must change on login").isNotEqualTo(before);
-        b.get("/api/auth/me").andExpect(status().isOk());
+        b.get("/api/auth/session").andExpect(jsonPath("$.authenticated").value(true));
     }
 
     @Test
@@ -168,7 +168,7 @@ class AuthIntegrationTest extends IntegrationTest {
     @Test
     void apiResponsesCarrySecurityHeaders() throws Exception {
         TestClient b = signedIn("headers");
-        b.get("/api/auth/me")
+        b.get("/api/auth/session")
                 .andExpect(header().string("X-Content-Type-Options", "nosniff"))
                 .andExpect(header().string("Content-Security-Policy", containsString("default-src 'none'")))
                 .andExpect(header().string("Content-Security-Policy", containsString("frame-ancestors 'none'")))
@@ -192,7 +192,7 @@ class AuthIntegrationTest extends IntegrationTest {
     void profileCanBeUpdatedAndValidated() throws Exception {
         TestClient b = signedIn("profile");
         b.patch("/api/users/me", json("displayName", "New Name")).andExpect(status().isOk()).andExpect(jsonPath("$.displayName").value("New Name"));
-        b.get("/api/auth/me").andExpect(jsonPath("$.displayName").value("New Name"));
+        b.get("/api/auth/session").andExpect(jsonPath("$.user.displayName").value("New Name"));
         b.patch("/api/users/me", json("displayName", "x".repeat(41))).andExpect(status().isBadRequest());
         b.patch("/api/users/me", json("displayName", "<b>")).andExpect(status().isBadRequest());
     }
@@ -210,7 +210,7 @@ class AuthIntegrationTest extends IntegrationTest {
         b.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/api/users/me").contentType(MediaType.APPLICATION_JSON).content(json("password", "correct horse battery staple"))).andExpect(status().isNoContent());
 
         for (String table : new String[] {"users", "notes", "tasks", "events", "preferences", "file_nodes", "file_contents"}) assertCount(table, 0);
-        b.get("/api/auth/me").andExpect(status().isUnauthorized());
+        b.get("/api/auth/session").andExpect(status().isOk()).andExpect(jsonPath("$.authenticated").value(false)).andExpect(jsonPath("$.user").doesNotExist());
     }
 
     @Test
